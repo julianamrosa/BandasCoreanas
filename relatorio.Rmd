@@ -1,0 +1,582 @@
+---
+title: "Bandas Coreanas"
+author: "Aline Ramos, Juliana Rosa, Rayssa Lorrane"
+date: "29/10/2021"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    code_folding: show
+    theme: united
+---
+
+\
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo=FALSE, out.width="25%", fig.cap="Universidade de Brasília (UnB)"}
+knitr::include_graphics("unb_logo.png")
+```
+Instituto de Exatas (IE)  
+Departamento de Estatística (EST)  
+Computação em Estatística 2- 2021.1  
+Professor: Eduardo Monteiro de Castro Gomes
+
+# Dicionário do _Kpop_
+
+- _Hallyu:_ movimento de expansão da cultura coreana;
+- _Kpop:_ música pop coreana;
+- _idol:_ artista de _kpop_;
+- _debut:_ primeiro lançamento do _idol_ ou da banda;
+- _comeback:_ primeiro lançamento do novo álbum de um _idol_ ou de uma banda;
+- _rookie/ trainee:_ artista que ainda não _debutou_, ainda está em treinamento;
+- _MV:_ vídeo clipe de uma música;
+- _bias:_ seu artista preferido da banda;
+- _maknae:_ membro mais novo do grupo.
+
+# Introdução
+
+Até a década de 80, os sul-coreanos ainda consumiam em massa os entretenimentos europeus e norte-americanos. Foi então que o governo da Coréia do Sul passou a investir na produção, e posteriormente exportação, de músicas, peças cinematográficas e gastronomia local. Assim, começou a ganhar força um movimento de valorização da cultura nacional: a “Onda Coreana” ou “Hallyu”, que teve forte impacto inicial no Japão, na China e no Sudeste da Ásia.  
+\
+Uma parte chave desse movimento foi o _kpop_, que se tornou sensação entre os jovens coreanos, se espalhando depois entre as demais faixas etárias. Nos últimos anos esse estilo musical passou a se destacar no cenário internacional, criando uma grande base de fãs principalmente no Brasil e nos Estados Unidos.  
+\
+Este trabalho tem como objetivo investigar algumas características dos grupos e dos cantores de _kpop_. Foram usadas como motivação as seguintes perguntas de pesquisa:  
+\
+1- Qual foi o desenvolvimento do _kpop_ ao longo dos anos? Há uma diferença no crescimento das bandas masculinas e femininas?  
+2- Quais são a maiores empresas de _kpop_?  
+3- Quantos membros as bandas costumam ter? Isso mudou ao longo dos anos? Existem outras variáveis que influenciam nisso?  
+4- Existem mais bandas femininas ou masculinas ativas nos dias de hoje?  
+5- O número de membros dentro de uma banda específica costuma mudar? É mais comum que esse número aumente ou diminua?  
+6- As bandas costumam ter um nome para o seu fanclub?  
+7- Os _idols_, em geral, estão em que faixa etária? Existe diferença entre as idades de _idols_ ativos e inativos?  
+8- Quais são as nacionalidades mais presentes de _idols_ estrangeiros (não-coreanos)?  
+9- Qual é a distribuição dos pesos e alturas dos _idols_?  
+10- É comum que _idols_ mudem de uma banda para outra?
+
+
+```{r, warning=FALSE}
+#Carregando pacotes necessários
+library(ggplot2)
+library(dplyr)
+library(readxl)
+library(lubridate)
+library(kableExtra)
+```
+
+```{r, warning=FALSE}
+#Importando dados
+#Já determinando os tipos das variáveis
+girlgroups <- read_xlsx("girlgroups.xlsx", col_types=c("text", "text", "text", "text", "date", "text", "numeric", "numeric", "text", "text"))
+
+boygroups <- read_xlsx("boygroups.xlsx", col_types=c("text", "text", "text", "text", "date", "text", "numeric", "numeric", "text", "text"))
+
+female_idols <- read_xlsx("female_idols.xlsx", col_types=c("text", "text", "text", "text", "text", "date", "text", "text", "text", "numeric", "numeric", "text", "text", "text", "text", "text", "text"))
+
+male_idols <- read_xlsx("male_idols.xlsx", col_types=c("text", "text", "text", "text", "text", "date", "text", "text", "text", "numeric", "numeric", "text", "text", "text", "text", "text", "text"))
+```
+
+```{r, warning=FALSE}
+#Excluindo colunas que não interessam
+girlgroups <- girlgroups%>%
+  select(-Profile,-`Korean Name`)
+
+boygroups <- boygroups%>%
+  select(-Profile, -`Korean Name`)
+
+female_idols <- female_idols%>%
+  select(-Profile, -`Korean Name`, -`Korean Stage Name`, -`Other Group`, -`Position`, -`Instagram`, -`Twitter`)
+
+male_idols <- male_idols%>%
+  select(-Profile, -`Korean Name`, -`Korean Stage Name`, -`Other Group`, -`Position`, -`Instagram`, -`Twitter`)
+```
+
+```{r, warning=FALSE}
+#Deletando linhas vazias
+female_idols <- female_idols[!(is.na(female_idols$`Stage Name`)), ]
+
+male_idols <- male_idols[!(is.na(male_idols$`Stage Name`)), ]
+```
+
+```{r, warning=FALSE}
+#Juntando dados para criar um dataframe com todas as bandas
+girlgroups <- girlgroups%>%
+  mutate(Type="Grupos Femininos")
+
+boygroups <- boygroups%>%
+  mutate(Type="Grupos Masculinos")
+
+kpopgroups <- rbind(girlgroups, boygroups)
+```
+
+```{r, warning=FALSE}
+#Juntando os dados para criar um dataframe com todos os idols
+female_idols <- female_idols%>%
+  mutate(Sex="F")
+
+male_idols <- male_idols%>%
+  mutate(Sex="M")
+
+idols <- rbind(female_idols, male_idols)
+```
+
+# Evolução do _Kpop_
+
+```{r, warning=FALSE}
+#Vendo o número de bandas que debutaram em cada ano
+table(year(girlgroups$Debut))
+
+table(year(boygroups$Debut))
+```
+
+```{r, warning=FALSE}
+#Gráfico do número de bandas novas ao longo dos anos
+plot(x=c(1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021), y=c(0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 2, 1, 4, 1, 6, 4, 10, 13, 6, 13, 12, 17, 23, 24, 18, 20, 4), type="b", pch=19, xlab="Ano", 
+     ylab="Bandas Debutando", main="Surgimento de Bandas Femininas e Masculinas ao Longo dos Anos", ylim=c(0, 30), col=alpha("orange", 0.6), cex.main=1, font.main=1, sub="Fonte: https://dbkpop.com/k-pop-database-tables")
+lines(c(1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021), y=c(1, 1, 1, 1, 2, 0, 0, 0, 1, 2, 2, 1, 3, 4, 2, 8, 7, 13, 6, 15, 12, 12, 26, 11, 24, 22, 5), type="b", pch=19, col=alpha("green", 0.6))
+
+legend(1995, 30, c("Femininas", "Masculinas"), fill=c("orange", "green"))
+```
+
+A partir da figura acima, observa-se que no decorrer dos primeiros anos, havia pouquíssimas bandas surgindo, especialmente as femininas, que tiveram frequência nula em vários anos até 2004. Porém, a partir de 2010 houve um crescimento contínuo no número de bandas _debutando_, com auge em 2017, quando houve o surgimento de quase 50 grupos novos.
+
+# Maiores Empresas
+
+```{r, warning=FALSE}
+#Checando quais são as maiores empresas (que têm mais de 3 bandas)
+table(kpopgroups$Company)[table(kpopgroups$Company)>3]
+```
+
+```{r, warning=FALSE}
+#Organizando por frequência
+kpopgroups$Company = factor(kpopgroups$Company,levels=names(sort(table(kpopgroups$Company), decreasing=TRUE)))
+
+#Gráfico do número de bandas por empresa (para as maiores empresas)
+big_companies <- c("Big Hit", "Chrome", "Cube", "DSP", "JYP", "Maroo", "MBK", "Pledis", "RBW", "SM", "Star Empire", "Starship", "TOP Media", "TS", "Woollim", "YG")
+
+ggplot(kpopgroups%>%filter(Company %in% big_companies))+
+  geom_bar(aes(Company, fill=Type))+
+  coord_flip()+
+  facet_wrap(~Type)+
+  theme_test()+
+  theme(legend.position="none", plot.title = element_text(hjust=.5))+
+  labs(y="Número de Bandas", x="Empresa", title="Maiores Empresas de Kpop", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+
+  scale_fill_manual(values = c("darkorange2", "chartreuse3"))
+```
+
+O gráfico acima apresenta as empresas do _kpop_ que possuem mais de 3 bandas. Na Coréia do Sul existem três empresas de grande destaque na música pop: SM, JYP e YG. Essas três empresas são conhecidas como “BIG 3” e costumam lançar mais bandas e fazer maior sucesso nesse ramo. De fato, pode-se observar que elas aparecem na base do gráfico com 14, 9 e 6 bandas, respectivamente. Logo em seguida aparece a empresa Big Hit que tem crescido muito nos últimos anos após o sucesso internacional do grupo BTS. Percebe-se também que as maiores empresas costumam lançar grupos masculinos com maior frequência.
+
+```{r, warning=FALSE}
+#Olhando de perto as bandas da Big Hit (empresa do BTS)
+kpopgroups%>%filter(Company=="Big Hit")
+```
+
+# Número de Membros
+
+```{r, warning=FALSE}
+#Teste de normalidade
+#H0) O número de membros é normalmente distribuído.
+shapiro.test(kpopgroups$Members)
+```
+
+Foi realizado o teste de Shapiro-Wilk para verificar se o número de membros nas bandas se distribui normalmente. O resultado foi de uma estatística de teste de 0.86. Como a estatística W não está suficientemente próxima de 1 para indicar normalidade, rejeita-se a hipótese nula.
+
+```{r}
+#Vendo a média e a mediana do número de membros
+mean(kpopgroups$Members)
+median(kpopgroups$Members)
+```
+
+
+```{r, warning = FALSE}
+#Gráfico para a distribuição do número de membros
+ggplot(kpopgroups)+
+  geom_histogram(aes(Members), bins=15, fill="darkmagenta", alpha=0.7)+
+  geom_vline(xintercept=mean(kpopgroups$Members), color="darkred")+
+  geom_vline(xintercept=median(kpopgroups$Members), color="darkblue")+
+  annotate("text", x=3.7, y=100, label= "Mediana: 5", color="darkblue")+
+  annotate("text", x=7, y=100, label= "Média: 5.56", color="darkred")+
+  theme_test()+
+  xlim(0, 15)+
+  labs(x="Número de Membros", y="Frequência", title="Distribuição do Número de Membros", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+
+  theme(plot.title = element_text(hjust=.5))
+```
+
+No histograma acima, é possível observar que a distribuição dessa variável é assimétrica à direita, reforçando a rejeição da normal como modelo. Também é visível que o número mais comum de membros em uma banda é 5, o que reflete no valor da mediana. A média também está próxima desse valor, mas um pouco acima (5.56) por causa da assimetria mencionada. O gráfico indica que é incomum ter menos de 4 ou mais de 10 membros em uma banda.
+
+```{r, warning=FALSE}
+#Gráfico para número de membros- feminino vs masculino
+ggplot(kpopgroups, aes(x = Type, y = Members))+
+geom_boxplot(fill = c("darkorange2", "chartreuse3"), width = 0.5) + theme_test()+
+    stat_summary(fun = "mean", geom="point", shape=23, size=3, fill="white") +
+  labs(x="", y="Número de Membros", title="Número de Membros para Bandas Femininas e Masculinas", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+
+  theme(plot.title = element_text(hjust=.5))
+```
+
+```{r, warning=FALSE}
+#Medidas Descritivas para o número de membros
+
+#Grupos femininos
+medidasG <- data.frame( girlgroups%>%
+  summarize(media=mean(Members), min=min(Members), q1=quantile(Members, 0.25),
+            mediana=median(Members), q3=quantile(Members, 0.75), max=max(Members),
+            iiq=IQR(Members), variancia=var(Members),
+            dp=sd(Members), cv=sd(Members)/mean(Members)))
+
+#Grupos masculinos
+medidasB <- data.frame(boygroups%>%
+  summarize(media=mean(Members), min=min(Members), q1=quantile(Members, 0.25),
+            mediana=median(Members), q3=quantile(Members, 0.75), max=max(Members),
+            iiq=IQR(Members), variancia=var(Members),
+            dp=sd(Members), cv=sd(Members)/mean(Members)))
+
+#Jntando as informações em uma só tabela 
+medidasJuntas <- bind_rows(medidasG,medidasB)
+medidasJuntas <- round(medidasJuntas, 2)
+
+#Tabela das medidas descritivas do número de membros
+t(medidasJuntas) %>%
+  kbl(caption = "Tabela 1: Medidas Descritivas para o Número de Membros.", col.names=c("Grupos Femininos", "Grupos Masculinos"), align=c("c", "c")) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position="left")
+```
+Fonte: [dbkpop](https://dbkpop.com/k-pop-database-tables)  
+\
+Os boxplots mostram a diferença no tamanho das bandas femininas e masculinas: os grupos masculinos costumam ter mais membros. Com exceção da mediana, que é 5 para ambos os tipos de banda, todas as medidas de posição são mais altas para os grupos masculinos. A média também é bem mais elevada, o que provavelmente está relacionado ao outlier de mais de 20 membros que existe entre as bandas masculinas (o grupo NCT). Pelo coeficiente de variação, nota-se também que a distribuição tem menor variabilidade para as bandas femininas.
+
+```{r, warning=FALSE}
+#Gráfico ano vs membros
+ggplot(kpopgroups)+
+  geom_jitter(aes(year(Debut), Members, color=Active, shape=Type), alpha=0.5)+
+  theme_test()+
+  labs(x="Ano", y="Número de Membros", title="Número de Membros ao Longo dos Anos", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+
+  scale_color_manual(values = c("green", "blue", "red"), labels=c("Hiato", "Inativa", "Ativa"))+
+  scale_shape_manual(values=c(16, 17), labels=c("Feminino", "Masculino"))+
+  guides(color = guide_legend(title = "Status da Banda"), shape=guide_legend(title="Tipo de Banda"))+
+  theme(plot.title = element_text(hjust=.5))
+```
+
+O diagrama acima evidencia o crescimento do _kpop_ nos últimos anos, já que a quantidade de bandas surgindo nos anos mais recentes é bem maior do que anteriormente. Também é possível perceber certo aumento na quantidade de membros nas bandas. Além disso, grupos femininos passaram a ganhar maior espaço na indústria. O que surpreende é a mistura das cores por todo o gráfico, pois o esperado seria que as bandas mais antigas estivessem inativas e as mais novas ativas. Na verdade, isso ocorre porque a fama é mais importante em determinar o status da banda do que seu tempo de atividade. Se um grupo faz muito sucesso, ele continua ativo mesmo depois de anos de carreira. Já os grupos que não fazem sucesso são logo desligados mesmo quando são relativamente novos.
+
+```{r, warning=FALSE}
+#Outlier
+kpopgroups%>%filter(Members>15)
+```
+
+# Bandas Ativas
+
+```{r, warning = FALSE}
+#Teste de independência
+#HO) O tipo de banda não interfere no seu status.
+chisq.test(kpopgroups$Type, kpopgroups$Active)
+```
+
+Foi realizado um teste de independência para verificar a relação entre o tipo de banda (feminina/ masculina) e seu status (ativa/ inativa). Com um p-valor de 0.0004, rejeita-se a hipótese de independência e conclui-se que essas duas variáveis estão associadas.
+
+```{r, warning=FALSE}
+#Coeficiente de Contingencia Modificado
+qui_quadrado <- as.numeric(chisq.test(kpopgroups$Type, kpopgroups$Active)[1])
+(2*qui_quadrado/(364+qui_quadrado))**0.5
+```
+
+
+O coeficiente de contingência modificado assumiu valor de 0.29, indicando que a associação mencionada é de fraca a moderada.
+
+```{r, warning=FALSE}
+#Tabela de contingência para o status vs o tipo da banda
+tipo_banda <- kpopgroups[,c("Type","Active")] %>%
+  table() %>%
+  prop.table(margin=1)
+tipo_banda <- round(tipo_banda, 2)
+
+tipo_banda%>%
+  kbl(caption = "Tabela 2: Status das Bandas.", col.names=c("Hiato", "Inativos", "Ativos"), align=rep('c', 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position="left")
+```
+Fonte: [dbkpop](https://dbkpop.com/k-pop-database-tables)  
+\
+A tabela 2 indica poucas bandas em hiato e uma maioria de bandas masculinas em atividade. Apenas 53% das bandas femininas continuam ativas atualmente, enquanto para as masculinas esse valor é de 72%.
+
+```{r, warning=FALSE}
+#Gráfico para bandas ativas ou inativas
+ggplot(kpopgroups)+
+  geom_bar(aes(Active, fill=Type), position="dodge")+
+  theme_test()+
+  labs(x="Status da Banda", y="Número de Bandas", title="Número de Bandas Ativas e Inativas", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+
+  scale_fill_manual(values = c("darkorange2", "chartreuse3"), labels=c("Feminino", "Masculino"))+
+  guides(fill = guide_legend(title = "Tipo de Banda"))+
+  scale_x_discrete(labels=c("Hiato", "Inativa", "Ativa"))+
+  theme(plot.title = element_text(hjust=.5))
+```
+
+No gráfico é evidente que, para ambos os tipos de banda, o mais comum é estar em ativa e o menos comum é estar em hiato. Também é reforçada a conclusão de que os grupos femininos costumam sair de atividade em proporção maior quando comparados aos masculinos.
+
+# Mudança nos Integrantes
+
+```{r, warning=FALSE}
+#Criando uma variável que seja a diferença entre o número de membros original e o número de membros atual
+kpopgroups["dif_membros"]<- kpopgroups$`Orig. Memb.` - kpopgroups$`Members`
+
+#Gráfico de colunas para os países de origem
+ggplot(kpopgroups)+ geom_bar(aes(x = as.character(dif_membros)), fill = "yellow3")+labs(title= "Mudança no Número de Membros das Bandas",x="Membros que Entraram/ Saíram", y="Frequência", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+ theme_test()+theme(plot.title = element_text(hjust=.5))
+```
+
+O cálculo foi feito considerando a diferença entre o número de integrantes originais e atuais.  
+Como é possível observar pelo gráfico, na grande maioria das bandas, o número de membros permanece intacto. Mas, analisando o fluxo das demais classes nota-se que é mais comum a saída de membros do que a entrada. E, dentre as categorias que representam alguma mudança no número de membros, a de maior frequência é a que representa a saída de 1 participante. 
+
+# Fã-clubes
+
+```{r, warning=FALSE}
+#Contando o número de NA’s na variável “Fanclub Name”.
+sum(is.na(kpopgroups$`Fanclub Name`))
+
+#Total de bandas
+nrow(kpopgroups)
+```
+```{r, warning=FALSE}
+#Tabela de proporções das bandas com ou sem nome para o fanclube
+Fanclub <- data.frame(com = round((364-248)/364, 2), sem = round(248/364, 2))
+Fanclub %>%
+  kbl(caption = "Tabela 3: Proporção de Bandas que têm Nome para o seu Fã-clube.", col.names=c("Com Nome para o Fã-Clube", "Sem Nome para o Fã-Clube"), align=rep('c', 3)) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position="left")
+
+```
+Fonte: [dbkpop](https://dbkpop.com/k-pop-database-tables)  
+\
+Ao observar o percentual de bandas que possuem nome para seu fã-clube (31.87%), é verossímil que esta não é uma característica comum à maioria dos grupos. O percentual de bandas que não carregam essa característica é mais que o dobro das que carregam. 
+
+# Idades dos _Idols_
+
+```{r, warning=FALSE}
+#Criando variável para indicar se o idol está ativo ou não
+idols$Active <- rep(NA, 1549)
+for (i in 1:nrow(kpopgroups)){
+  for (j in 1:nrow(idols)){
+    if (!is.na(idols$Group[j])){
+      if (idols$Group[j]==kpopgroups$Name[i]){
+        idols$Active[j] <- kpopgroups$Active[i]
+      }
+    }
+  }
+}
+
+for (i in 1:nrow(idols)){
+  if (!is.na(idols$Active[i])){
+    if (idols$Active[i]=="Yes"){
+      idols$Active[i] <- "Ativo"
+    }
+    if (idols$Active[i]=="No"){
+      idols$Active[i] <- "Inativo"
+    }
+  }
+}
+```
+
+```{r, warning=FALSE}
+# Criando variável idade
+idols <- idols%>%
+  mutate(Idade=2021-year(`Date of Birth`)) #idade aproximada
+```
+
+```{r, warning=FALSE}
+#Teste de normalidade
+#H0) a idade é normalmente distribuída.
+
+#Filtrando só para ativos e inativos (sem NA's e Hiatos)
+idols2 <- idols%>%filter(Active%in%c("Ativo", "Inativo"))
+
+#Teste para idols ativos
+shapiro.test((idols2%>%filter(Active=="Ativo"))$Idade)
+
+#Teste para idols inativos
+shapiro.test((idols2%>%filter(Active=="Inativo"))$Idade)
+```
+
+Foram feitos dois testes de Shapiro-Wilk para checar se a distribuição das idades dos _idols_ é normal. Para os cantores ativos, o teste resultou em um p-valor extremamente pequeno (na casa de 10^-15^), rejeitando a hipótese de normalidade. Já para os inativos, o p-valor foi mais elevado, assumindo 0.018. Para um teste com nível de significância de 5%, esse valor permite a rejeição da hipótese nula, mas tomando um nível de 1%, por exemplo, isso não é possível.
+
+```{r, warning=FALSE}
+#Gráfico de idades
+ggplot(idols2)+
+  geom_histogram(aes(Idade), bins=23, fill="deeppink1")+
+  facet_wrap(~Active, scales="free_y", nrow=2)+
+  theme_test()+
+  labs(y="Frequência", title="Distribuição de Idades dos Idols Ativos e Inativos", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+
+  theme(plot.title = element_text(hjust=.5))
+```
+
+Os histogramas acima comprovam que a distribuição de idades é mais simétrica para os _idols_ inativos, com maior concentração de frequências entre 25 e 30 anos. Para os ativos, há uma assimetria à direita, indicando cantores mais jovens, e os dados parecem estar concentrados entre as idades de 15 e 25 anos.
+
+```{r, warning=FALSE}
+#Medidas Descritivas das idades
+
+#Para ativos
+ativo <- idols2 %>%
+  filter(Active=="Ativo")%>%
+  summarize(media=mean(Idade), min=min(Idade), q1=quantile(Idade, 0.25),
+            mediana=median(Idade), q3=quantile(Idade, 0.75), max=max(Idade),
+            iiq=IQR(Idade), variancia=var(Idade),
+            dp=sd(Idade), cv=sd(Idade)/mean(Idade))
+
+#Para inativos
+inativo <- idols2 %>%
+  filter(Active=="Inativo")%>%
+  summarize(media=mean(Idade), min=min(Idade), q1=quantile(Idade, 0.25),
+            mediana=median(Idade), q3=quantile(Idade, 0.75), max=max(Idade),
+            iiq=IQR(Idade), variancia=var(Idade),
+            dp=sd(Idade), cv=sd(Idade)/mean(Idade))
+
+#Jntando as informações
+IdadeJuntas <- bind_rows(ativo,inativo)
+IdadeJuntas <- round(IdadeJuntas, 2)
+
+#Tabela de medidas descritivas para as idades
+t(IdadeJuntas) %>%
+  kbl(caption = "Tabela 4: Medidas Descritivas das Idades.", align=rep('c', 2), col.names=c("Idols Ativos", "Idols Inativos")) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position="left")
+```
+Fonte: [dbkpop](https://dbkpop.com/k-pop-database-tables)  
+\
+De fato, quase todas as medidas de posição são mais altas para os _idols_ inativos. A única exceção é o valor máximo que, curiosamente, é mais alto para os ativos, pois existem cantores de 42 anos ainda em atividade. Por fim, as idades dos _idols_ ativos são mais variáveis, como se pode ver a partir do coeficiente de variação (0.19 vs 0.14).
+
+```{r}
+#Idols de 42 anos
+idols2%>%filter(Idade==42)
+```
+
+```{r}
+#Banda dos idols de 42 anos
+kpopgroups%>%filter(Name=="Shinhwa")
+```
+
+
+# _Idols_ Estrangeiros
+
+```{r, warning=FALSE}
+#filtrar para idols que são não-coreanos
+nacionalidade <- idols %>%
+  filter(Country != "South Korea")
+
+#Juntando China e Hong Kong
+for (i in 1:nrow(nacionalidade)){
+  if (nacionalidade$Country[i]=="Hong Kong"){
+    nacionalidade$Country[i] <- "China"
+  }
+}
+
+#Organizando por frequência
+nacionalidade$Country = factor(nacionalidade$Country,levels=names(sort(table(nacionalidade$Country), decreasing=TRUE)))
+
+#Gráfico de barras para as demais nacionalidades
+ggplot(nacionalidade, aes(y = Country))+ geom_bar(fill = "cornflowerblue")+labs(title= "Nacionalidade de Idols Não-Coreanos",x="Frequência", y="País de Origem", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+ theme_test()+theme(plot.title = element_text(hjust=.5))+
+  scale_y_discrete(breaks=rev(c("Japan", "China", "USA", "Taiwan", "Thailand", "Canada", "Indonesia", "Australia", "Germany", "Malaysia", "Philippines")), labels=rev(c("Japão", "China", "Estados Unidos", "Taiwan", "Tailândia", "Canadá", "Indonésia", "Austrália", "Alemanha", "Malásia", "Filipinas")))
+```
+
+A nacionalidade de idols não-coreanos marca presença em 7 países localizados na Ásia, 2 na América do Norte, 1 na Europa e 1 na Oceania. A maior frequência de _idols_ estrangeiros está concentrada na China e no Japão, ambos superando a frequência de 40 cantores. Para os demais países, a frequência diminui drasticamente, onde a maioria apresenta menos de 10 _idols_. 
+
+# Pesos e Alturas dos _Idols_
+
+```{r, warning = FALSE}
+#Gráfico para alturas e pesos dos idols
+ggplot(idols%>%filter(Height!=0, Weight!=0), aes(Height, Weight, color=Sex))+
+  geom_jitter(alpha=0.5)+
+  geom_smooth(method=lm, se=FALSE, formula=y~x)+
+  theme_test()+
+  labs(x="Altura (cm)", y="Peso (kg)", title="Alturas e Pesos dos Idols", caption="Fonte: https://dbkpop.com/k-pop-database-tables")+
+  theme(plot.title = element_text(hjust=.5))+
+  scale_color_manual(values = c("aquamarine2", "darkslategray4"), labels=c("Mulheres", "Homens"))+
+  guides(color = guide_legend(title = ""))
+```
+
+Como já esperado de um gráfico Peso x Altura, há uma relação positiva entre as variáveis (quando a altura aumenta, o peso também aumenta). O fator sexo também aparece da maneira esperada: homens mais altos e mais pesados do que mulheres. Uma das informações novas que podem ser retiradas do gráfico é que existem mais _idols_ homens do que mulheres, o que faz sentido já que as bandas masculinas costumam ter mais membros. Além disso, as cantoras têm menor variabilidade nos pesos, refletindo a exigência no padrão de beleza feminino. Também é interessante perceber que alguns homens se misturam entre os pesos e alturas femininos.
+
+```{r, warning=FALSE}
+#Outlier
+idols%>%filter(Weight>80)
+```
+
+```{r, warning = FALSE}
+#Mulheres:
+#Testando relação linear
+cor.test((female_idols%>%filter(Height!=0, Weight!=0))$Height, (female_idols%>%filter(Height!=0, Weight!=0))$Weight, method="spearman")
+cor.test((female_idols%>%filter(Height!=0, Weight!=0))$Height, (female_idols%>%filter(Height!=0, Weight!=0))$Weight, method="pearson")
+
+#Modelo linear
+mod2 <- lm(Weight~Height, data=female_idols%>%filter(Height!=0, Weight!=0))
+coef(mod2)
+```
+
+```{r, warning = FALSE}
+#Homens:
+#Testando relação linear
+cor.test((male_idols%>%filter(Height!=0, Weight!=0))$Height, (male_idols%>%filter(Height!=0, Weight!=0))$Weight, method="spearman")
+cor.test((male_idols%>%filter(Height!=0, Weight!=0))$Height, (male_idols%>%filter(Height!=0, Weight!=0))$Weight, method="pearson")
+
+#Modelo linear
+mod1 <- lm(Weight~Height, data=male_idols%>%filter(Height!=0, Weight!=0))
+coef(mod1)
+```
+
+Os coeficientes de Pearson e Spearman estão em torno de 0.65 para as mulheres e 0.62 para os homens, indicando que há uma correlação linear entre altura e peso em ambos os casos (mais linear para as mulheres). Ao construir o modelo de regressão linear, o valor do intercepto não é muito informativo nesse caso pois a altura ser nula seria uma situação impossível. Já os coeficientes angulares mostram que o aumento de 1 cm na altura causa, em média, um aumento de 0.46 kg no peso das mulheres e 0,79 kg no peso dos homens.
+
+```{r, warning=FALSE}
+#Tabela anova mulheres
+anova2 <- anova(mod2)
+anova2 %>%
+  kbl(align="c", caption="Tabela 5: ANOVA para o Modelo Linear Peso x Altura das Mulheres.", col.names=c("FV", "SQ", "QM", "Estatística F", "P-Valor"), row.names=F)%>%
+  kable_classic(full_width = F, html_font = "Cambria", position="left")
+```
+Fonte: [dbkpop](https://dbkpop.com/k-pop-database-tables)  
+```{r, warning=FALSE}
+#Tabela anova homens
+anova1 <- anova(mod1)
+anova1 %>%
+  kbl(align="c", caption="Tabela 6: ANOVA para o Modelo Linear Peso x Altura dos Homens.", col.names=c("FV", "SQ", "QM", "Estatística F", "P-Valor"), row.names=F)%>%
+  kable_classic(full_width = F, html_font = "Cambria", position="left")
+```
+Fonte: [dbkpop](https://dbkpop.com/k-pop-database-tables)  
+\
+Por fim, a estatística F, disponível nas tabelas ANOVA, permite a rejeição da hipótese nula em ambos os casos. Essa hipótese é de que a coeficiente angular seria zero. Com isso, comprova-se a pertinência do modelo linear para essas variáveis.
+
+# Realocação de Cantores
+
+```{r, warning=FALSE}
+#Contando o número de NA’s na variável “Former Group”
+sum(is.na(idols$`Former Group`))
+
+#Total de idols
+nrow(idols)
+```
+
+```{r, warning=FALSE}
+#Tabela das proporções dos idols que mudaram ou não de banda
+Fanclub <- data.frame(Nunca = round(1324/1549, 2),Já = round((1549-1324)/1549, 2))
+Fanclub <- round(Fanclub, 2)#Diminuindo as casas decimais 
+Fanclub %>%
+  kbl(align=rep('c', 2), caption="Tabela 7: Proporção de Idols que Mudaram de Banda.", col.names=c("Nunca Mudaram", "Já Mudaram")) %>%
+  kable_classic(full_width = F, html_font = "Cambria", position="left")
+```
+Fonte: [dbkpop](https://dbkpop.com/k-pop-database-tables)  
+\
+Apenas 15% dos _idols_ já mudaram de uma banda para outra. Um dos indicativos desse resultado é que a saída de um membro pode afetar negativamente a imagem e a popularidade do grupo.
+
+# Conclusões
+
+A partir das análises feitas, é evidente que o _kpop_ teve um grande crescimento nos últimos anos, principalmente para os grupos femininos, que antes eram menos valorizados. Também foi possível perceber que algumas empresas possuem uma espécie de monopólio na indústria.  
+\
+Sobre os grupos de _kpop_, concluiu-se que a maior parcela dos que estão em ativa são masculinos, que também são os que costumam ter mais membros. O número de integrantes em uma banda, em geral, varia entre 4 e 7, mas tem apresentado tendência de crescimento nos últimos anos. O fator mais determinante do status da banda (ativa/ inativa) é o sucesso dela, e não o seu tempo de atividade. As bandas femininas são desligadas com maior frequência, mostrando que as masculinas ainda fazem maior sucesso.  
+\
+Outras curiosidades sobre os grupos de pop coreano: o número de membros em uma banda não costuma mudar, mas quando muda geralmente é porque houve a saída de um integrante; os _idols_ não costumam intercambiar muito entre diferentes grupos; a maioria das bandas não possui um nome oficial para o seu fã-clube.  
+\
+Analisando os dados pessoais dos _idols_, foi possível perceber que os que estão ativos são, em geral, mais jovens, provavelmente devido à constante entrada de _rookies_ na indústria. Além disso, apesar de a maioria dos cantores ser coreana, existem também idols estrangeiros, em especial vindos da China, do Japão ou dos Estados Unidos. Por fim, os pesos dos cantores variam de 40 kg a 50 kg para as mulheres e de 55 kg a 75 kg para os homens. Já as alturas variam de 150 cm a 175 cm para as mulheres e de 170 cm a 185 cm para os homens.
+
+# Referências
+
+Fonte de dados:  
+https://dbkpop.com/db/k-pop-girlgroups  
+https://dbkpop.com/db/k-pop-boybands  
+https://dbkpop.com/db/female-k-pop-idols  
+https://dbkpop.com/db/male-k-pop-idols  
+\
+Dicionário do _kpop:_  
+https://aminoapps.com/c/universocoreano-9350942/page/blog/girias-de-k-pop/6P8r_L6ltzu6qvoGvnzvbgdPQ15G6MEq0ZZ
