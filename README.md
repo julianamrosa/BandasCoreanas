@@ -8,6 +8,7 @@ Este trabalho em grupo foi feito para a disciplina Computação em Estatística 
 - girlgroups.xlsx - dados dos grupos femininos de kpop;
 - female_idols.xlsx - dados das cantoras;
 - male_idols.xlsx - dados dos cantores;
+- unb_logo.png - logotipo da Universidade de Brasília, usada no código;
 - relatorio.Rmd - arquivo do R com código que gera o relatório;
 - relatorio.html - relatório final;
 - Bandas Coreanas.pdf - apresentação dos principais resultados.
